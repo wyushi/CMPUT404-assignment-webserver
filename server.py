@@ -45,6 +45,8 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         header = parse(self.data)
         if header['method'] == 'GET':
             self.handle_GET(header)
+        else:
+            self.send_error_page(405)
         
 
     def handle_GET(self, header):
@@ -102,7 +104,8 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     # See http://www.w3.org/hypertext/WWW/Protocols/HTTP/HTRESP.html
     responses = {
         200: ('OK', 'Request fulfilled, document follows'),
-        404: ('Not found', 'Nothing matches the given URI')
+        404: ('Not found', 'Nothing matches the given URI'),
+        405: ('Method Not Allowed', 'A request was made of a resource using a request method not supported by that resource; for example, using GET on a form which requires data to be presented via POST, or using PUT on a read-only resource.')
     }
 
 
