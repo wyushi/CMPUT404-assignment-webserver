@@ -44,6 +44,8 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024).strip()
         header = parse(self.data)
+        if header == None:
+            return
         if header['method'] == 'GET':
             self.handle_GET(header)
         else:
@@ -121,7 +123,10 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         '': 'application/octet-stream',
         '.html': 'text/html',
         '.css': 'text/css',
-        '.js': 'application/javascript'
+        '.js': 'application/javascript',
+        '.png': 'image/png',
+        '.jpeg': 'image/jpeg',
+        '.jpg': 'image/jpg'
     }
 
     # The version of the HTTP protocol we support.
