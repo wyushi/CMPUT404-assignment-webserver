@@ -4,6 +4,7 @@ import os
 
 
 def routing(route):
+    route = urllib.unquote(route)
     # print 'route: ' + route
     # if is_beyound_root(route):
     #     return None
