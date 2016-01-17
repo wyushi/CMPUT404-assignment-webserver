@@ -37,3 +37,9 @@ nosetests.xml
 
 # virtual env
 .venv
+
+# OS X
+.DS_Store
+
+#pycharm
+.idea
