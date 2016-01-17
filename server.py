@@ -1,7 +1,5 @@
 #  coding: utf-8 
-import SocketServer
-from os import curdir, sep
-
+import SocketServer, os
 from http_header_parser import parse
 from router import routing
 
@@ -32,23 +30,81 @@ from router import routing
 
 
 class MyWebServer(SocketServer.BaseRequestHandler):
+
+    def setup(self):
+        self.connection = self.request
+        self.wfile = self.connection.makefile('wb', 0)
+
+    def finish(self):
+        self.wfile.flush()
+        self.wfile.close()
+
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
         header = parse(self.data)
-        print '--------------- header -------------'
-        print self.data
-
         if header['method'] == 'GET':
-            self.handle_get(header)
-        else:
-            self.request.sendall("OK")
+            self.handle_GET(header)
+        
 
-    def handle_get(self, header):
+    def handle_GET(self, header):
         path = routing(header['route'])
-        file = open(curdir + path) 
-        self.request.sendall(file.read())
+        if os.path.exists(path):
+            self.send_header_start(200)
+            self.send_header_end()
+            self.send_static_page(path)
+        else:
+            self.send_error_page(404)        
+
+    def send_header_start(self, code):
+        short, long_message = self.responses[code]
+        self.wfile.write('%s %s %s \r\n' % 
+            (self.protocol_version, str(code), short))
+
+
+    def send_header_field(self, key, value):
+        self.wfile.write("%s: %s\r\n" % (key, value))
+
+
+    def send_header_end(self):
+        self.wfile.write('\r\n')
+
+
+    def send_static_page(self, path):
+        file = open(path)
+        self.wfile.write(file.read())
         file.close()
+
+    def send_error_page(self, code):
+        self.send_header_start(code)
+        self.send_header_end()
+        f = open(self.error_page_template)
+        template = f.read()
+        f.close()
+        self.wfile.write(template % {
+                'code': code,
+                'short_msg': self.responses[code][0],
+                'long_msg': self.responses[code][1]
+            })
+
+
+    # Essentially static class variables
+    
+    error_page_template = './www/error.html'
+
+    # The version of the HTTP protocol we support.
+    # Don't override unless you know what you're doing (hint: incoming
+    # requests are required to have exactly this version string).
+    protocol_version = "HTTP/1.0"
+    # Table mapping response codes to messages; entries have the
+
+    # form {code: (shortmessage, longmessage)}.
+    # See http://www.w3.org/hypertext/WWW/Protocols/HTTP/HTRESP.html
+    responses = {
+        200: ('OK', 'Request fulfilled, document follows'),
+        404: ('Not found', 'Nothing matches the given URI')
+    }
+
 
 
 if __name__ == "__main__":
