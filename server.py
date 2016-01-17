@@ -1,5 +1,9 @@
 #  coding: utf-8 
 import SocketServer
+from os import curdir, sep
+
+from http_header_parser import parse
+from router import routing
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -31,8 +35,21 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall("OK")
+        header = parse(self.data)
+        print '--------------- header -------------'
+        print self.data
+
+        if header['method'] == 'GET':
+            self.handle_get(header)
+        else:
+            self.request.sendall("OK")
+
+    def handle_get(self, header):
+        path = routing(header['route'])
+        file = open(curdir + path) 
+        self.request.sendall(file.read())
+        file.close()
+
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
@@ -43,4 +60,5 @@ if __name__ == "__main__":
 
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
+    print  'Server starts listening on port %d\n' % PORT
     server.serve_forever()
