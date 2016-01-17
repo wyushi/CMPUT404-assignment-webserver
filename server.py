@@ -35,6 +35,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         self.connection = self.request
         self.wfile = self.connection.makefile('wb', 0)
 
+
     def finish(self):
         self.wfile.flush()
         self.wfile.close()
@@ -47,16 +48,36 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             self.handle_GET(header)
         else:
             self.send_error_page(405)
-        
 
+        
     def handle_GET(self, header):
         path = routing(header['route'])
         if os.path.exists(path):
             self.send_header_start(200)
+            self.send_header_field("Content-type", self.mimetype(path))
+            self.send_header_field("Content-length", self.content_length(path))
             self.send_header_end()
             self.send_static_page(path)
         else:
-            self.send_error_page(404)        
+            self.send_error_page(404)
+
+
+    def mimetype(self, path):
+        name, ext = os.path.splitext(path)
+        ext = ext.lower()
+        if self.mimetypes.has_key(ext):
+            return self.mimetypes[ext]
+        else:
+            return self.mimetypes['']
+
+
+    def content_length(self, path):
+        try:
+            size = os.path.getsize(path)
+        except os.error as error:
+            print error
+        return size
+
 
     def send_header_start(self, code):
         short, long_message = self.responses[code]
@@ -77,8 +98,10 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         self.wfile.write(file.read())
         file.close()
 
+
     def send_error_page(self, code):
         self.send_header_start(code)
+        self.send_header_field("Content-type", self.error_page_template)
         self.send_header_end()
         f = open(self.error_page_template)
         template = f.read()
@@ -93,6 +116,13 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     # Essentially static class variables
     
     error_page_template = './www/error.html'
+
+    mimetypes = {
+        '': 'application/octet-stream',
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'application/javascript'
+    }
 
     # The version of the HTTP protocol we support.
     # Don't override unless you know what you're doing (hint: incoming
