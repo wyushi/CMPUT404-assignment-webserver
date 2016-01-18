@@ -31,6 +31,28 @@ from router import routing
 
 class MyWebServer(SocketServer.BaseRequestHandler):
 
+    # constants
+    error_page_template = './www/error.html'
+
+    mimetypes = {
+        '': 'application/octet-stream',
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'application/javascript',
+        '.png': 'image/png',
+        '.jpeg': 'image/jpeg',
+        '.jpg': 'image/jpg'
+    }
+
+    protocol_version = "HTTP/1.0"
+
+    responses = {
+        200: ('OK', 'Request fulfilled, document follows'),
+        301: ('Moved Permanently', 'This and all future requests should be directed to the given URI.'),
+        404: ('Not found', 'Nothing matches the given URI'),
+        405: ('Method Not Allowed', 'A request was made of a resource using a request method not supported by that resource; for example, using GET on a form which requires data to be presented via POST, or using PUT on a read-only resource.')
+    }
+
     def setup(self):
         self.connection = self.request
         self.wfile = self.connection.makefile('wb', 0)
@@ -133,27 +155,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
                 'short_msg': self.responses[code][0],
                 'long_msg': self.responses[code][1]
             })
-    
-    error_page_template = './www/error.html'
-
-    mimetypes = {
-        '': 'application/octet-stream',
-        '.html': 'text/html',
-        '.css': 'text/css',
-        '.js': 'application/javascript',
-        '.png': 'image/png',
-        '.jpeg': 'image/jpeg',
-        '.jpg': 'image/jpg'
-    }
-
-    protocol_version = "HTTP/1.0"
-
-    responses = {
-        200: ('OK', 'Request fulfilled, document follows'),
-        301: ('Moved Permanently', 'This and all future requests should be directed to the given URI.'),
-        404: ('Not found', 'Nothing matches the given URI'),
-        405: ('Method Not Allowed', 'A request was made of a resource using a request method not supported by that resource; for example, using GET on a form which requires data to be presented via POST, or using PUT on a read-only resource.')
-    }
 
 
 
