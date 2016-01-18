@@ -9,7 +9,7 @@ def parse(data):
     return header
 
 def parse_first_line(raw, header):
-    first_line_end = raw.find('\n')
+    first_line_end = raw.find('\r\n')
     first_line = raw[0 : first_line_end]
     parts = first_line.split(' ')
     
