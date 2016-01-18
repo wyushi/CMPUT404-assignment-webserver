@@ -43,3 +43,6 @@ nosetests.xml
 
 #pycharm
 .idea
+
+#vagrant 
+.vagrant
