@@ -49,18 +49,24 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         if header['method'] == 'GET':
             self.handle_GET(header)
         else:
-            self.send_error_page(405)
+            self.send_error_page(405, [])
 
         
     def handle_GET(self, header):
         path = routing(header['route'])
+
         if path == None:
-            self.send_error_page(404)
+            self.send_error_page(404, [])
+            return
+        if os.path.isdir(path):
+            self.send_header(301, [
+                ('Location', header['route'] + '/')
+            ])
             return
         if os.path.exists(path):
-            self.send_static_page(path)
+            self.send_static_page(path, [])
         else:
-            self.send_error_page(404)
+            self.send_error_page(404, [])
 
 
     def mimetype(self, path):
@@ -94,24 +100,31 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         self.wfile.write('\r\n')
 
 
+    def send_header(self, code, fields):
+        self.send_header_start(code)
+        for key, value in fields:
+            self.send_header_field(key, value)
+        self.send_header_end()
+
+
     def send_file_content(self, path):
         file = open(path)
         self.wfile.write(file.read())
         file.close()
 
 
-    def send_static_page(self, path):
-        self.send_header_start(200)
-        self.send_header_field("Content-type", self.mimetype(path))
-        self.send_header_field("Content-length", self.content_length(path))
-        self.send_header_end()
+    def send_static_page(self, path, fields):
+        self.send_header(200, [
+            ("Content-type", self.mimetype(path)),
+            ("Content-length", self.content_length(path))
+        ])
         self.send_file_content(path)
 
 
-    def send_error_page(self, code):
-        self.send_header_start(code)
-        self.send_header_field("Content-type", self.mimetype(self.error_page_template))
-        self.send_header_end()
+    def send_error_page(self, code, fields):
+        self.send_header(code, [
+            ("Content-type", self.mimetype(self.error_page_template))
+        ])
         f = open(self.error_page_template)
         template = f.read()
         f.close()
@@ -137,6 +150,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
     responses = {
         200: ('OK', 'Request fulfilled, document follows'),
+        301: ('Moved Permanently', 'This and all future requests should be directed to the given URI.'),
         404: ('Not found', 'Nothing matches the given URI'),
         405: ('Method Not Allowed', 'A request was made of a resource using a request method not supported by that resource; for example, using GET on a form which requires data to be presented via POST, or using PUT on a read-only resource.')
     }
