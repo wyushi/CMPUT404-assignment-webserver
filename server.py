@@ -54,6 +54,9 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         
     def handle_GET(self, header):
         path = routing(header['route'])
+        if path == None:
+            self.send_error_page(404)
+            return
         if os.path.exists(path):
             self.send_header_start(200)
             self.send_header_field("Content-type", self.mimetype(path))
