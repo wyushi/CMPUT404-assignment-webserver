@@ -58,10 +58,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             self.send_error_page(404)
             return
         if os.path.exists(path):
-            self.send_header_start(200)
-            self.send_header_field("Content-type", self.mimetype(path))
-            self.send_header_field("Content-length", self.content_length(path))
-            self.send_header_end()
             self.send_static_page(path)
         else:
             self.send_error_page(404)
@@ -98,10 +94,18 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         self.wfile.write('\r\n')
 
 
-    def send_static_page(self, path):
+    def send_file_content(self, path):
         file = open(path)
         self.wfile.write(file.read())
         file.close()
+
+
+    def send_static_page(self, path):
+        self.send_header_start(200)
+        self.send_header_field("Content-type", self.mimetype(path))
+        self.send_header_field("Content-length", self.content_length(path))
+        self.send_header_end()
+        self.send_file_content(path)
 
 
     def send_error_page(self, code):
