@@ -1,6 +1,6 @@
 #  coding: utf-8 
 import SocketServer, os
-from http_header_parser import parse
+from header import parse
 from router import routing
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
@@ -106,7 +106,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
     def send_error_page(self, code):
         self.send_header_start(code)
-        self.send_header_field("Content-type", self.error_page_template)
+        self.send_header_field("Content-type", self.mimetype(self.error_page_template))
         self.send_header_end()
         f = open(self.error_page_template)
         template = f.read()
@@ -116,9 +116,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
                 'short_msg': self.responses[code][0],
                 'long_msg': self.responses[code][1]
             })
-
-
-    # Essentially static class variables
     
     error_page_template = './www/error.html'
 
@@ -132,14 +129,8 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         '.jpg': 'image/jpg'
     }
 
-    # The version of the HTTP protocol we support.
-    # Don't override unless you know what you're doing (hint: incoming
-    # requests are required to have exactly this version string).
     protocol_version = "HTTP/1.0"
-    # Table mapping response codes to messages; entries have the
 
-    # form {code: (shortmessage, longmessage)}.
-    # See http://www.w3.org/hypertext/WWW/Protocols/HTTP/HTRESP.html
     responses = {
         200: ('OK', 'Request fulfilled, document follows'),
         404: ('Not found', 'Nothing matches the given URI'),
